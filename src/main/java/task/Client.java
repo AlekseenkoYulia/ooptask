@@ -2,7 +2,6 @@ package task;
 
 import java.io.*;
 import java.net.*;
-//import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,15 +36,8 @@ public class Client {
         try {
             Socket s = openSocket();
             OutputStream out = s.getOutputStream();
-            InputStream is = s.getInputStream();
-            //InputStreamReader reader = new InputStreamReader(is, StandardCharsets.UTF_8);
-            //out.write(request.getBytes(StandardCharsets.UTF_8));
+            DataInputStream is = new DataInputStream(s.getInputStream());
             out.write(request.getBytes("utf-8"));
-
-//            byte[] buf = new byte[20];
-//            is.read(buf);
-//            String s1 = new String(buf, StandardCharsets.US_ASCII);
-
 
             List<String> headers = getHeaders(is);
             if (!(headers.get(0).equals("HTTP/1.1 200 OK"))){
@@ -56,19 +48,16 @@ public class Client {
 
             StringBuilder content = new StringBuilder();
             int size = getSize(is);
-            System.out.println("size " + size);
-            content.append(getContent(is, size));
-            //System.out.println(content);
-            //size = getSize(is);
-            //System.out.println("size " + size);
 
 
-            //while(size > 0){
-            //content.append(getContent(is, size));
-            //size = getSize(reader);
-            //}
+            while(size > 0){
+                content.append(getContent(is, size));
+                size = getSize(is);
+            }
 
-//            findStory(content.toString());
+            System.out.println(content);
+
+            findStory(content.toString());
 
             s.close();
             out.close();
@@ -121,9 +110,12 @@ public class Client {
         return size;
     }
 
-    public String getContent(InputStream is, int size) throws IOException{
+    public String getContent(DataInputStream is, int size) throws IOException{
         byte[] buffer = new byte[size];
-        is.read(buffer);
+        is.readFully(buffer);
+        is.read();
+        is.read();
+
         String content = new String(buffer, "utf-8");
         return content;
     }
